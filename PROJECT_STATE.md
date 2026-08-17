@@ -1,0 +1,44 @@
+# Canary project state
+
+Updated: 2026-08-17
+
+## Goal
+
+Build a standalone autonomous risk-governance agent for the Orion Agents Builder Hackathon. Canary tests competing financial strategies under one mandate, grants simulated bounded authority to the safest eligible performer, and revokes it before an unsafe action executes.
+
+## Current milestone
+
+Autonomous local MVP implemented and verified. Public launch and hackathon submission remain outstanding.
+
+## Confirmed
+
+- Product name: Canary.
+- Core loop: mandate → competing shadow trial → capped promotion → continuous enforcement/revocation.
+- The supplied Orion requirements do not state that an Orion SDK or API integration is required. Agent Store listing follows review; it is not a pre-submission integration requirement.
+- The submission requires registration from the submitting wallet, a website, X profile, GitHub, Discord or Telegram, and the form's agent/category/chain/economics details.
+- A demo link is optional but strongly recommended. Submission includes an approximately $10 ETH ignition fee.
+- Deadline: September 2, 2026 at 23:59 UTC.
+- Canary deliberately does not move real funds or claim live market data in this milestone.
+- Agent proposals and external data are untrusted; deterministic policy code controls authorization.
+- Northstar wins the illustrative preservation mandate because lower drawdown and perfect policy compliance outweigh higher-return candidates.
+- `npm run check` passes: lint, nine tests, ten deterministic evaluation runs, TypeScript and production build.
+- Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
+- `npm audit` reports zero known vulnerabilities; all 227 installed packages have verified registry signatures and 90 have verified attestations.
+- Browser QA exercised the autonomous run through revocation, confirmed report `cnr_749197ea`, found no console warnings/errors, and confirmed no page-level overflow at 390 x 844.
+- A repository scan found no common secret patterns outside generated dependencies/build output.
+
+## Current gaps
+
+- No public website deployment or public GitHub repository exists yet.
+- X and Discord/Telegram project links are not prepared yet.
+- Wallet registration, ignition fee payment, and final submission require the user's wallet and approval.
+- No live data feed, wallet flow, contract, or transaction exists; these are not claimed and are not shown as requirements in the supplied rules.
+- The Content Security Policy is present in the static HTML; production response headers still depend on the eventual host.
+
+## Next actions
+
+1. Publish the repository and deploy the frontend to a public URL.
+2. Verify the live revision, security headers, primary workflow, and assets.
+3. Create the X and Discord/Telegram project presence and prepare submission copy/media.
+4. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
+5. Add live data or a scoped testnet enforcement path only if it improves the demo and can be verified honestly; it is not currently treated as mandatory.
