@@ -1,6 +1,6 @@
 # Canary project state
 
-Updated: 2026-08-17
+Updated: 2026-08-18
 
 ## Goal
 
@@ -8,7 +8,7 @@ Build a standalone autonomous risk-governance agent for the Orion Agents Builder
 
 ## Current milestone
 
-Autonomous local MVP implemented and verified. Public launch and hackathon submission remain outstanding.
+Autonomous MVP implemented, redesigned, published, and deployed. Submission preparation remains outstanding.
 
 ## Confirmed
 
@@ -24,12 +24,13 @@ Autonomous local MVP implemented and verified. Public launch and hackathon submi
 - `npm run check` passes: lint, nine tests, ten deterministic evaluation runs, TypeScript and production build.
 - Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
 - `npm audit` reports zero known vulnerabilities; all 227 installed packages have verified registry signatures and 90 have verified attestations.
-- Browser QA exercised the autonomous run through revocation, confirmed report `cnr_749197ea`, found no console warnings/errors, and confirmed no page-level overflow at 390 x 844.
+- Browser QA exercised the redesigned tabbed interface and autonomous run through revocation, confirmed report `cnr_749197ea`, found no console warnings/errors, and confirmed no page-level overflow at 390 x 844.
+- Public repository: https://github.com/nftkingiii/canary-orion-agent
+- Railway deployment: https://agent-canary.up.railway.app
 - A repository scan found no common secret patterns outside generated dependencies/build output.
 
 ## Current gaps
 
-- No public website deployment or public GitHub repository exists yet.
 - X and Discord/Telegram project links are not prepared yet.
 - Wallet registration, ignition fee payment, and final submission require the user's wallet and approval.
 - No live data feed, wallet flow, contract, or transaction exists; these are not claimed and are not shown as requirements in the supplied rules.
@@ -37,8 +38,7 @@ Autonomous local MVP implemented and verified. Public launch and hackathon submi
 
 ## Next actions
 
-1. Publish the repository and deploy the frontend to a public URL.
-2. Verify the live revision, security headers, primary workflow, and assets.
-3. Create the X and Discord/Telegram project presence and prepare submission copy/media.
-4. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
-5. Add live data or a scoped testnet enforcement path only if it improves the demo and can be verified honestly; it is not currently treated as mandatory.
+1. Redeploy the redesigned `main` revision and verify the public workflow and assets.
+2. Create the X and Discord/Telegram project presence and prepare submission copy/media.
+3. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
+4. Add live data or a scoped testnet enforcement path only if it improves the demo and can be verified honestly; it is not currently treated as mandatory.

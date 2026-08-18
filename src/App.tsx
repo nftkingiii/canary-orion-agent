@@ -1,152 +1,110 @@
 import { useRef, useState } from 'react'
-import { Activity, Ban, Check, CircleDollarSign, Gauge, LoaderCircle, LockKeyhole, Play, RotateCcw, ShieldCheck, TriangleAlert } from 'lucide-react'
+import { Activity, ArrowUpRight, Ban, Check, CircleDot, Gauge, LoaderCircle, LockKeyhole, Play, RotateCcw, ShieldCheck } from 'lucide-react'
 import { mandate } from './data'
 import { runCanaryAgent, strategyAgents, type CanaryReport } from './agent-engine'
 
 type Phase = 'ready' | 'running' | 'shadowed' | 'promoted' | 'revoked' | 'error'
+type Tab = 'overview' | 'trial' | 'mandate' | 'evidence'
 const formatUsd = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
 const delay = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds))
+const phaseCopy: Record<Phase, string> = { ready: 'Awaiting trial', running: 'Challenging agents', shadowed: 'Candidate selected', promoted: 'Authority live', revoked: 'Threat contained', error: 'Failed closed' }
 
 function Score({ value }: { value: number }) {
-  return <div className="score" aria-label={`Trial score ${value} out of 100`}><span>{value.toFixed(1)}</span><div><i style={{ width: `${Math.max(0, value)}%` }} /></div></div>
+  return <div className="score" aria-label={`Trial score ${value} out of 100`}><strong>{value.toFixed(1)}</strong><span><i style={{ width: `${Math.max(0, value)}%` }} /></span></div>
 }
 
 function App() {
   const [phase, setPhase] = useState<Phase>('ready')
+  const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [report, setReport] = useState<CanaryReport | null>(null)
   const [error, setError] = useState('')
   const runSequence = useRef(0)
   const isEvaluated = report !== null && !['ready', 'running', 'error'].includes(phase)
-  const isAuthorized = phase === 'promoted'
-  const isRevoked = phase === 'revoked'
   const selected = report?.candidates.find((candidate) => candidate.id === report.selectedAgentId)
 
   const start = async () => {
     const sequence = runSequence.current + 1
     runSequence.current = sequence
-    setError('')
-    setReport(null)
-    setPhase('running')
+    setActiveTab('trial'); setError(''); setReport(null); setPhase('running')
     try {
-      await delay(350)
+      await delay(500)
       const nextReport = runCanaryAgent(mandate)
       if (runSequence.current !== sequence) return
-      setReport(nextReport)
-      setPhase('shadowed')
-      await delay(800)
+      setReport(nextReport); setPhase('shadowed')
+      await delay(900)
       if (runSequence.current !== sequence) return
       setPhase('promoted')
-      await delay(900)
+      await delay(1100)
       if (runSequence.current !== sequence) return
       setPhase('revoked')
     } catch (cause) {
       if (runSequence.current !== sequence) return
-      setError(cause instanceof Error ? cause.message : 'Canary could not complete the trial')
-      setPhase('error')
+      setError(cause instanceof Error ? cause.message : 'Canary could not complete the trial'); setPhase('error')
     }
   }
 
-  const reset = () => {
-    runSequence.current += 1
-    setReport(null)
-    setError('')
-    setPhase('ready')
-  }
-
-  const phaseLabel = phase === 'ready' ? 'Ready' : phase === 'running' ? 'Running suite' : phase === 'shadowed' ? 'Trial complete' : phase === 'promoted' ? 'Monitoring' : phase === 'revoked' ? 'Contained' : 'Run failed'
+  const reset = () => { runSequence.current += 1; setReport(null); setError(''); setPhase('ready') }
+  const tabButton = (tab: Tab, label: string, index: string) => <button className={activeTab === tab ? 'tab active' : 'tab'} onClick={() => setActiveTab(tab)} role="tab" aria-selected={activeTab === tab}><span>{index}</span>{label}</button>
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell phase-${phase}`}>
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Canary home"><span className="brand-mark"><Activity size={18} /></span><span>Canary</span></a>
-        <nav aria-label="Product navigation"><a className="active" href="#trial">Agent run</a><a href="#mandate">Mandate</a><a href="#evidence">Evidence</a></nav>
-        <div className={`mode ${phase === 'running' ? 'running' : ''}`}><span /> {phaseLabel}</div>
+        <button className="brand" onClick={() => setActiveTab('overview')} aria-label="Canary overview"><span className="brand-signal"><Activity size={19} /></span><strong>CANARY</strong></button>
+        <div className="top-status"><i /> {phaseCopy[phase]}</div><div className="edition">ORION / 2026</div>
       </header>
+      <nav className="tabs" role="tablist" aria-label="Canary workflows">
+        {tabButton('overview', 'Overview', '01')}{tabButton('trial', 'Live trial', '02')}{tabButton('mandate', 'Mandate', '03')}{tabButton('evidence', 'Evidence', '04')}
+      </nav>
 
-      <main id="top">
-        <section className="hero">
-          <div><h1>Authority must be earned.</h1><p>Canary autonomously challenges financial agents, promotes the safest performer under a capped mandate, and revokes authority before unsafe execution.</p></div>
-          <div className={`authority-card ${isRevoked ? 'danger' : isAuthorized ? 'success' : ''}`} aria-live="polite">
-            <div className="authority-icon">{phase === 'running' ? <LoaderCircle className="spin" size={22} /> : isRevoked ? <Ban size={22} /> : isAuthorized ? <ShieldCheck size={22} /> : <LockKeyhole size={22} />}</div>
-            <div><span>Simulated authority</span><strong>{isRevoked ? 'Revoked' : isAuthorized ? formatUsd(mandate.liveCapUsd) : formatUsd(0)}</strong></div>
-            <small>{isRevoked ? '57 bps drift contained' : isAuthorized ? 'Capped · monitoring active' : phase === 'running' ? 'Evaluating candidates' : 'No authority granted'}</small>
+      <main>
+        {activeTab === 'overview' && <section className="overview-screen" role="tabpanel">
+          <div className="hero-copy">
+            <div className="eyebrow"><span>Autonomous risk governance</span><span>Deterministic / Inspectable</span></div>
+            <h1>Authority<br />must be<br /><em>earned.</em></h1>
+            <p>Canary puts financial agents through the same hostile trial, grants the safest performer bounded authority, then revokes it the instant behavior drifts.</p>
+            <button className="hero-cta" onClick={start}><span>{phase === 'ready' ? 'Run the autonomous trial' : 'Run the trial again'}</span><ArrowUpRight size={19} /></button>
           </div>
-        </section>
+          <div className="authority-stage" aria-live="polite">
+            <div className="stage-meta"><span>AUTHORITY CORE</span><span>STATE / {phase.toUpperCase()}</span></div>
+            <div className="core-wrap"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="core-grid" /><div className="core"><span className="core-value">{phase === 'promoted' ? '$1K' : phase === 'revoked' ? 'OFF' : '00'}</span><small>{phase === 'revoked' ? 'revoked' : phase === 'promoted' ? 'live cap' : phase === 'running' ? 'scanning' : 'authority'}</small></div><span className="coordinate c-one">CAP / 1,000</span><span className="coordinate c-two">SLIP / 40 BPS</span><span className="coordinate c-three">MODE / SIM</span></div>
+            <div className="stage-bottom"><div><strong>{formatUsd(mandate.capitalUsd)}</strong><span>capital protected</span></div><div><strong>{strategyAgents.length}</strong><span>candidate agents</span></div><div><strong>{report?.safety.unsafeExecuted ?? 0}</strong><span>unsafe executions</span></div></div>
+          </div>
+          <div className="principle-strip"><span>01 / CHALLENGE</span><i /><span>02 / PROMOTE</span><i /><span>03 / MONITOR</span><i /><span>04 / REVOKE</span></div>
+        </section>}
 
-        <section className="metric-row" aria-label="Agent run overview">
-          <article><span>Capital protected</span><strong>{formatUsd(mandate.capitalUsd)}</strong><small>Simulation · no funds moved</small></article>
-          <article><span>Candidate strategies</span><strong>{strategyAgents.length}</strong><small>Executable adapters</small></article>
-          <article><span>Held-out scenarios</span><strong>{report?.scenarioCount ?? 6}</strong><small>Same conditions for every candidate</small></article>
-          <article><span>Unsafe executions</span><strong>{report?.safety.unsafeExecuted ?? 0}</strong><small>{report ? `${report.safety.blocked} decisions blocked` : 'Fail-closed policy'}</small></article>
-        </section>
+        {activeTab === 'trial' && <section className="trial-screen" role="tabpanel">
+          <div className="screen-heading"><div><span className="kicker">02 / LIVE TRIAL</span><h2>Three agents enter.<br /><em>One earns authority.</em></h2></div><button className="reset-button" onClick={reset} disabled={phase === 'ready'}><RotateCcw size={15} /> Reset</button></div>
+          <div className="trial-layout">
+            <div className="candidate-stack">{strategyAgents.map((agent, index) => {
+              const result = report?.candidates.find((candidate) => candidate.id === agent.id); const isSelected = result?.id === report?.selectedAgentId
+              return <article className={`candidate ${result && !result.eligible ? 'failed' : ''} ${isSelected && isEvaluated ? 'selected' : ''}`} key={agent.id}>
+                <div className="candidate-index">0{index + 1}</div><div className="candidate-name"><h3>{agent.name}</h3><span>{agent.strategy}</span></div>
+                <div className="candidate-measure"><small>Policy pass</small><strong>{result ? `${Math.round(result.passRate * 100)}%` : '—'}</strong></div><div className="candidate-measure"><small>Drawdown</small><strong>{result ? `${result.maxDrawdownPct}%` : '—'}</strong></div>
+                <div>{result && isEvaluated ? <Score value={result.trialScore} /> : <span className="pending">{phase === 'running' ? <><LoaderCircle className="spin" size={14} /> RUNNING</> : 'QUEUED'}</span>}</div>
+                <div className="candidate-state">{!isEvaluated && <span>{phase === 'running' ? 'TESTING' : 'WAITING'}</span>}{isEvaluated && result && !result.eligible && <span className="danger-text">BLOCKED</span>}{isEvaluated && result?.eligible && !isSelected && <span>PASSED</span>}{isSelected && phase === 'shadowed' && <span>SELECTED</span>}{isSelected && phase === 'promoted' && <span>AUTHORIZED</span>}{isSelected && phase === 'revoked' && <span className="danger-text">REVOKED</span>}</div>
+              </article>
+            })}</div>
+            <aside className="run-console"><div className="console-top"><span>CANARY / AUTONOMOUS</span><CircleDot size={15} /></div><div className={`mini-core state-${phase}`}><span>{phase === 'revoked' ? <Ban size={30} /> : phase === 'promoted' ? <ShieldCheck size={30} /> : phase === 'running' ? <LoaderCircle className="spin" size={30} /> : <LockKeyhole size={30} />}</span></div>
+              <div className="console-message" role="status">{phase === 'ready' && <><span>READY</span><h3>Challenge every candidate.</h3><p>Six common market conditions. Five hard limits. No manual intervention after launch.</p></>}{phase === 'running' && <><span>RUNNING / 06 SCENARIOS</span><h3>Generating and checking decisions.</h3><p>Every proposal is intercepted before it can count as safe.</p></>}{phase === 'shadowed' && selected && <><span>TRIAL COMPLETE</span><h3>{selected.name} ranks first.</h3><p>{selected.trialScore.toFixed(1)} score with a {Math.round(selected.passRate * 100)}% policy pass rate.</p></>}{phase === 'promoted' && <><span>AUTHORITY GRANTED</span><h3>{formatUsd(mandate.liveCapUsd)} simulated cap is live.</h3><p>Continuous policy monitoring has started.</p></>}{phase === 'revoked' && <><span>THREAT CONTAINED</span><h3>Authority revoked before execution.</h3><p>{report?.drift.proposal.maxSlippageBps} bps breached the {mandate.maxSlippageBps} bps limit. No funds moved.</p></>}{phase === 'error' && <><span>FAILED CLOSED</span><h3>The trial stopped safely.</h3><p>{error}</p></>}</div>
+              <button className="console-action" onClick={start} disabled={phase === 'running'}><span>{phase === 'running' ? 'Trial in progress' : phase === 'ready' ? 'Begin autonomous run' : 'Run again'}</span>{phase === 'running' ? <LoaderCircle className="spin" size={17} /> : <Play size={17} />}</button>
+            </aside>
+          </div>
+        </section>}
 
-        <div className="workspace">
-          <section className="panel trial-panel" id="trial">
-            <div className="panel-heading"><div><span className="section-label">Autonomous run</span><h2>One mandate. One common trial.</h2></div><button className="text-button" onClick={reset} disabled={phase === 'ready'}><RotateCcw size={15} /> Reset</button></div>
-            <div className="agent-table" role="table" aria-label="Candidate agent results">
-              <div className="agent-row table-head" role="row"><span>Agent</span><span>Trial coverage</span><span>Observed</span><span>Trial score</span><span>Status</span></div>
-              {strategyAgents.map((agent) => {
-                const result = report?.candidates.find((candidate) => candidate.id === agent.id)
-                const isSelected = result?.id === report?.selectedAgentId
-                return (
-                  <div className={`agent-row ${result && !result.eligible ? 'failed' : ''} ${isSelected && isEvaluated ? 'selected' : ''}`} role="row" key={agent.id}>
-                    <div className="agent-name"><span className="agent-avatar">{agent.name.slice(0, 1)}</span><div><strong>{agent.name}</strong><small>{agent.strategy}</small></div></div>
-                    <div><strong>{result ? `${result.passCount} / ${result.scenarioCount} safe` : '6 scenarios'}</strong><small>{result ? `${Math.round(result.passRate * 100)}% policy pass rate` : 'Awaiting autonomous run'}</small></div>
-                    <div><strong>{result ? `${result.averageReturnPct >= 0 ? '+' : ''}${result.averageReturnPct}% avg` : 'Pending'}</strong><small>{result ? `${result.maxDrawdownPct}% max drawdown` : 'No observation'}</small></div>
-                    <div>{result && isEvaluated ? <Score value={result.trialScore} /> : phase === 'running' ? <span className="running-copy"><LoaderCircle className="spin" size={13} /> Running</span> : <span className="muted">Pending</span>}</div>
-                    <div>
-                      {!isEvaluated && <span className="status neutral">{phase === 'running' ? 'Testing' : 'Queued'}</span>}
-                      {isEvaluated && result && !result.eligible && <span className="status blocked">Blocked</span>}
-                      {isEvaluated && result?.eligible && !isSelected && <span className="status passed">Passed</span>}
-                      {isEvaluated && isSelected && phase === 'shadowed' && <span className="status leading">Selected</span>}
-                      {isSelected && isAuthorized && <span className="status authorized">Authorized</span>}
-                      {isSelected && isRevoked && <span className="status blocked">Revoked</span>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+        {activeTab === 'mandate' && <section className="detail-screen" role="tabpanel">
+          <div className="screen-heading"><div><span className="kicker">03 / MANDATE</span><h2>Hard limits.<br /><em>No exceptions.</em></h2></div><LockKeyhole size={34} /></div>
+          <div className="mandate-grid"><article><span>01</span><small>SIMULATED AUTHORITY CAP</small><strong>{formatUsd(mandate.liveCapUsd)}</strong><p>No candidate can receive more authority than the mandate permits.</p></article><article><span>02</span><small>MAXIMUM ALLOCATION</small><strong>{mandate.maxAllocationPct}%</strong><p>Any proposal above this boundary is blocked before execution.</p></article><article><span>03</span><small>MAXIMUM DRAWDOWN</small><strong>{mandate.maxDrawdownPct}%</strong><p>Risk tolerance is code, not a suggestion to the strategy agent.</p></article><article><span>04</span><small>MAXIMUM SLIPPAGE</small><strong>{mandate.maxSlippageBps} BPS</strong><p>The held-out drift test deliberately breaches this boundary.</p></article><article className="wide"><span>05</span><small>PROTOCOL ALLOWLIST</small><strong>AAVE / MORPHO</strong><p>Unknown execution venues fail closed. This build is a deterministic simulation and cannot sign transactions.</p></article></div>
+        </section>}
 
-            {phase === 'ready' && <div className="action-strip"><div><Play size={20} /><span><strong>Start Canary</strong><small>Canary will complete the trial, promotion, monitoring challenge, and safety response without further input.</small></span></div><button className="primary" onClick={start}>Run autonomous agent <Play size={15} /></button></div>}
-            {phase === 'running' && <div className="action-strip active-run" role="status"><div><LoaderCircle className="spin" size={20} /><span><strong>Executing the scenario suite</strong><small>Candidate decisions are being generated and checked against the same five hard limits.</small></span></div><button className="secondary" onClick={reset}>Cancel run</button></div>}
-            {phase === 'shadowed' && selected && <div className="action-strip recommendation" role="status"><div><Check size={20} /><span><strong>{selected.name} earned first authority</strong><small>{Math.round(selected.passRate * 100)}% policy pass rate across {selected.scenarioCount} scenarios. Canary is granting a simulated {formatUsd(mandate.liveCapUsd)} cap.</small></span></div><span className="auto-step">Continuing automatically</span></div>}
-            {phase === 'promoted' && <div className="action-strip warning" role="status"><div><TriangleAlert size={20} /><span><strong>Monitoring detected behavior drift</strong><small>A new {report?.drift.proposal.maxSlippageBps} bps proposal is being checked against the {mandate.maxSlippageBps} bps mandate.</small></span></div><span className="auto-step">Policy decision pending</span></div>}
-            {phase === 'revoked' && <div className="action-strip stopped" role="status"><div><Ban size={20} /><span><strong>Authority revoked before execution</strong><small>{report?.drift.violations.join(', ')}. All {formatUsd(mandate.capitalUsd)} remained in simulation.</small></span></div><button className="secondary" onClick={start}>Run again</button></div>}
-            {phase === 'error' && <div className="action-strip stopped" role="alert"><div><TriangleAlert size={20} /><span><strong>Canary failed closed</strong><small>{error}</small></span></div><button className="secondary" onClick={start}>Retry</button></div>}
-          </section>
-
-          <aside className="side-stack">
-            <section className="panel mandate-panel" id="mandate">
-              <div className="panel-heading compact"><div><span className="section-label">Active mandate</span><h2>Treasury preservation</h2></div><LockKeyhole size={18} /></div>
-              <dl><div><dt>Simulated capital cap</dt><dd>{formatUsd(mandate.liveCapUsd)}</dd></div><div><dt>Max allocation</dt><dd>{mandate.maxAllocationPct}%</dd></div><div><dt>Max drawdown</dt><dd>{mandate.maxDrawdownPct}%</dd></div><div><dt>Max slippage</dt><dd>{mandate.maxSlippageBps} bps</dd></div><div><dt>Allowed protocols</dt><dd>Aave, Morpho</dd></div></dl>
-              <p className="helper">This build executes deterministic simulations only. It cannot sign transactions or move funds.</p>
-            </section>
-
-            <section className="panel evidence-panel" id="evidence">
-              <div className="panel-heading compact"><div><span className="section-label">Decision report</span><h2>Inspectable agent work</h2></div><Gauge size={18} /></div>
-              <ol className="timeline">
-                {(report?.events ?? [
-                  { step: 'mandate', outcome: 'verified', detail: 'Waiting for autonomous run' },
-                  { step: 'shadow', outcome: 'verified', detail: 'Six common scenarios queued' },
-                  { step: 'promotion', outcome: 'verified', detail: 'No authority granted' },
-                  { step: 'monitor', outcome: 'blocked', detail: 'Monitoring not started' },
-                  { step: 'revocation', outcome: 'revoked', detail: 'No revocation required' },
-                ]).map((event, index) => {
-                  const completed = Boolean(report) && (phase === 'revoked' || index < (phase === 'shadowed' ? 2 : phase === 'promoted' ? 4 : 0))
-                  const isBlocked = completed && ['blocked', 'revoked'].includes(event.outcome)
-                  return <li className={isBlocked ? 'blocked-step' : completed ? 'done' : ''} key={event.step}><span>{completed ? isBlocked ? <Ban size={12} /> : <Check size={12} /> : index + 1}</span><div><strong>{event.step[0].toUpperCase() + event.step.slice(1)}</strong><small>{completed ? event.detail : index === 0 ? event.detail : 'Pending'}</small></div></li>
-                })}
-              </ol>
-              {report && <div className="report-id"><span>Report</span><code>{report.reportId}</code></div>}
-            </section>
-          </aside>
-        </div>
-
-        <section className="explanation"><div><CircleDollarSign size={20} /><span><strong>Executable candidates.</strong><small>Each strategy generates proposals from the same market scenarios.</small></span></div><div><Activity size={20} /><span><strong>Measured agent behavior.</strong><small>Pass rate, drawdown, returns, latency, and blocked decisions are recorded.</small></span></div><div><ShieldCheck size={20} /><span><strong>Deterministic containment.</strong><small>Policy code—not model output—controls promotion and revocation.</small></span></div></section>
+        {activeTab === 'evidence' && <section className="detail-screen" role="tabpanel">
+          <div className="screen-heading"><div><span className="kicker">04 / EVIDENCE</span><h2>Every decision<br /><em>leaves a trace.</em></h2></div><Gauge size={34} /></div>
+          <div className="evidence-layout"><div className="evidence-summary"><span>REPORT ID</span><code>{report?.reportId ?? 'RUN TRIAL TO GENERATE'}</code><div><strong>{report?.safety.decisions ?? 19}</strong><small>policy decisions</small></div><div><strong>{report?.safety.blocked ?? 0}</strong><small>blocked decisions</small></div><div><strong>{report ? `${Math.round(report.safety.enforcementPassRate * 100)}%` : '—'}</strong><small>enforcement pass</small></div></div>
+            <ol className="evidence-rail">{(report?.events ?? [{ step: 'mandate', detail: 'Five hard limits queued' }, { step: 'shadow', detail: 'Six common scenarios queued' }, { step: 'promotion', detail: 'No authority granted' }, { step: 'monitor', detail: 'Monitoring not started' }, { step: 'revocation', detail: 'No revocation required' }]).map((event, index) => { const complete = Boolean(report); const danger = complete && index > 2; return <li className={danger ? 'danger' : complete ? 'complete' : ''} key={event.step}><span>{complete ? danger ? <Ban size={15} /> : <Check size={15} /> : `0${index + 1}`}</span><div><small>{event.step.toUpperCase()}</small><strong>{event.detail}</strong></div></li> })}</ol>
+          </div>{!report && <button className="evidence-cta" onClick={start}>Generate live evidence <ArrowUpRight size={18} /></button>}
+        </section>}
       </main>
-      <footer><span>Canary autonomous risk-governance agent</span><span>Deterministic simulation · no wallet connection · no real funds</span></footer>
+      <footer><span>CANARY / AUTONOMOUS RISK GOVERNANCE</span><span>SIMULATION ONLY · NO WALLET · NO REAL FUNDS</span></footer>
     </div>
   )
 }
-
 export default App
