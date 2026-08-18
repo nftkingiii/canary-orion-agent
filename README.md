@@ -23,6 +23,8 @@ Canary is an autonomous risk-governance agent. It makes financial agents earn bo
 
 The current build is a deterministic simulation. It does not connect a wallet, sign transactions, use real market observations, or move funds. Those limits are shown in the UI and machine-readable report.
 
+The three visible candidates are built-in simulation adapters defined in `src/agent-engine.ts`; they are not fetched from Orion or an external Agent Store. Live candidate intake is an explicit future integration boundary, not a claim made by this build.
+
 ## Run the product
 
 ```powershell
