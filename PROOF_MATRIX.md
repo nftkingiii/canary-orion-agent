@@ -7,7 +7,7 @@
 | Adverse state | 57 bps monitored proposal breaches a 40 bps mandate | Report `cnr_749197ea`, UI revocation and tests | Verified locally, 2026-08-17 |
 | Repeatability | Ten complete runs must produce one report identity and winner | `npm run agent:evaluate` | Verified: 10/10 stable |
 | Agent reliability | Six common scenarios, 19 decisions per run | Machine-readable report and candidate breakdown | Deterministic simulation only |
-| Product UI | One-click observer flow with loading, selection, promotion and revocation | Browser run at desktop and 390 x 844; no console errors or page overflow | Verified locally, 2026-08-17 |
+| Product UI | Configure mandate, save policy, run probation, inspect evidence, and observe revocation | Browser reproduction: mandate save, invalid-input rejection, autonomous run, report, no console errors | Verified locally, 2026-08-18 |
 | Orion SDK/API | Not stated in supplied submission requirements | `site info.pdf` captured 2026-08-17 | Not applicable unless later rules require it |
 | Real financial action | No wallet or signer exists; all authority is simulated | `realFundsMoved: false` | Not implemented; not claimed |
 | Deployment | Public frontend | Live URL and served revision | Missing |

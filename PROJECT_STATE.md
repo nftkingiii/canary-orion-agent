@@ -8,12 +8,13 @@ Build a standalone autonomous risk-governance agent for the Orion Agents Builder
 
 ## Current milestone
 
-Autonomous MVP implemented, redesigned, published, and deployed. Submission preparation remains outstanding.
+Operator workflow MVP implemented, redesigned, published, and deployed. Submission preparation remains outstanding.
 
 ## Confirmed
 
 - Product name: Canary.
 - Core loop: mandate → competing shadow trial → capped promotion → continuous enforcement/revocation.
+- Operator loop: configure mandate → validate and save → run probation → inspect evidence → observe promotion and revocation.
 - The supplied Orion requirements do not state that an Orion SDK or API integration is required. Agent Store listing follows review; it is not a pre-submission integration requirement.
 - The submission requires registration from the submitting wallet, a website, X profile, GitHub, Discord or Telegram, and the form's agent/category/chain/economics details.
 - A demo link is optional but strongly recommended. Submission includes an approximately $10 ETH ignition fee.
@@ -25,6 +26,7 @@ Autonomous MVP implemented, redesigned, published, and deployed. Submission prep
 - Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
 - `npm audit` reports zero known vulnerabilities; all 227 installed packages have verified registry signatures and 90 have verified attestations.
 - Browser QA exercised the redesigned tabbed interface and autonomous run through revocation, confirmed report `cnr_749197ea`, found no console warnings/errors, and confirmed no page-level overflow at 390 x 844.
+- Browser QA exercised mandate setup, invalid-input rejection, saved policy, probation, and automatic revocation; the current configuration is session-only and still simulation-backed.
 - Public repository: https://github.com/nftkingiii/canary-orion-agent
 - Railway deployment: https://agent-canary.up.railway.app
 - A repository scan found no common secret patterns outside generated dependencies/build output.
