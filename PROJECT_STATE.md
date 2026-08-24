@@ -25,8 +25,8 @@ Operator workflow and a bounded reference-agent adapter are deployed and publicl
 - Harbor is a real same-deployment HTTP reference-agent adapter: Canary verifies its manifest, requests six bounded scenario decisions, validates every response, and adds it to the probation suite. It is not an independent third-party agent, Orion API integration, or Agent Store listing.
 - The HTTP adapter accepts only bounded JSON scenarios, rejects malformed or oversized input, rate limits decision calls, emits restrictive response headers, and has a local health/manifest/valid-and-invalid-decision smoke test.
 - Northstar wins the fixture-only CLI evaluation. In the live four-candidate workflow, Harbor narrowly wins after its HTTP handshake and six validated decisions.
-- Harbor is visible in Live trial before probation as an `UNVERIFIED` reference agent, then transitions through handshake, testing, and evaluation states.
-- A high-contrast Canary bird/signal SVG is used as both the favicon and the in-product brand mark.
+- Public clean-browser verification shows Harbor in Live trial before probation as an `UNVERIFIED` reference agent, then transitioning through handshake, testing, evaluation, and revocation states.
+- A high-contrast Canary bird/signal SVG is publicly served as both the favicon and the in-product brand mark; the verified release bundle is `index-BW5uIfNs.js`.
 - `npm run check` passes: lint, nine tests, ten deterministic evaluation runs, TypeScript and production build.
 - Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
 - `npm audit` reports zero known vulnerabilities; all 227 installed packages have verified registry signatures and 90 have verified attestations.
