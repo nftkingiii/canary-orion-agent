@@ -4,6 +4,7 @@
 
 - **Mandate:** user-supplied capital and risk limits cross into deterministic validation.
 - **Candidate adapters:** strategy output is untrusted and must never authorize itself.
+- **External endpoint:** an operator-supplied URL crosses into a server-side network request and is an SSRF, denial-of-service, and schema-confusion boundary.
 - **Scenario observations:** current fixtures are deterministic simulation inputs, not live market truth.
 - **Promotion decision:** only eligible, policy-compliant results may receive simulated authority.
 - **Execution boundary:** the current build has no wallet or transaction signer; `realFundsMoved` is always false.
@@ -18,7 +19,9 @@
 | Candidate tries an unlisted protocol | Protocol allowlist blocks the decision | Typed call allowlists and destination-contract verification |
 | Replay or duplicated authority | No live signing exists | Nonces, expiry, idempotency and replay protection |
 | Client tampers with the simulation | Decision report is reproducible through the CLI and tests | Signed mandate plus server/contract enforcement |
-| Resource exhaustion | Suite and candidate counts are bounded to 3-100 and 2-20 | Request size limits, timeouts and rate limiting |
+| Resource exhaustion | Suite/candidate counts, request/response bodies, request duration and per-client frequency are bounded | Distributed rate limiting and workload isolation at larger scale |
 | Model or adapter output becomes executable code | Strategies return typed data; no `eval`, shell or HTML execution | Parse external output into a strict schema before policy evaluation |
+| Endpoint targets internal infrastructure | HTTPS-only URLs, DNS resolution checks, private/reserved IP rejection, no credentials/custom ports/query strings, and redirects disabled | Pin validated DNS results at the connection layer to eliminate DNS-rebinding TOCTOU risk |
+| Remote agent spoofs another identity | Every decision `agentId` must match the validated manifest | Signed manifests and rotating service identities |
 
 Canary must fail closed if mandate validation, candidate availability, scenario coverage or the drift challenge cannot be verified.
