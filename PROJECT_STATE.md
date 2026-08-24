@@ -40,11 +40,11 @@ Operator workflow and a bounded reference-agent adapter are implemented locally.
 - Wallet registration, ignition fee payment, and final submission require the user's wallet and approval.
 - No live data feed, wallet flow, contract, or transaction exists; these are not claimed and are not shown as requirements in the supplied rules.
 - Third-party candidate intake remains an unimplemented integration boundary; the UI labels it as such. The only networked candidate is Harbor, served by Canary itself.
-- Public deployment has not yet been read back after the custom Node server / reference-adapter change.
+- Railway is serving the reference-adapter revision: public `/healthz`, manifest, a valid decision, and malformed-decision rejection were read back on 2026-08-24. Browser QA completed Harbor’s manifest handshake, six decisions, comparison with the three local fixtures, promotion, and revocation without console errors.
 
 ## Next actions
 
-1. Push the reference-adapter revision, wait for Railway, and verify `/healthz`, manifest, decision rejection, and the public probation workflow against the live revision.
-2. Create the X and Discord/Telegram project presence and prepare submission copy/media.
-3. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
+1. Create the X and Discord/Telegram project presence and prepare submission copy/media.
+2. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
+3. Add a third-party or Orion-compatible candidate endpoint only if a verified contract becomes available; retain the same schema validation and fail-closed behavior.
 4. Add live data or a scoped testnet enforcement path only if it improves the demo and can be verified honestly; it is not currently treated as mandatory.
