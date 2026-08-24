@@ -8,6 +8,7 @@
 | Repeatability | Ten complete runs must produce one report identity and winner | `npm run agent:evaluate` | Verified: 10/10 stable |
 | Agent reliability | Six common scenarios, 19 decisions per run | Machine-readable report and candidate breakdown | Deterministic simulation only |
 | Candidate provenance | Built-in strategy adapters are labeled as local simulation fixtures | `src/agent-engine.ts`, UI source banner, README limitation | Verified locally, 2026-08-18 |
+| Reference-agent adapter | Same-deployment HTTP manifest and six schema-validated decision requests; unavailable/malformed responses stop probation | `server.mjs`, `src/remote-agent.ts`, `npm run adapter:smoke` | Verified locally pending public deployment read-back |
 | Product UI | Configure mandate, save policy, run probation, inspect evidence, and observe revocation | Browser reproduction: mandate save, invalid-input rejection, autonomous run, report, no console errors | Verified locally, 2026-08-18 |
 | Orion SDK/API | Not stated in supplied submission requirements | `site info.pdf` captured 2026-08-17 | Not applicable unless later rules require it |
 | Real financial action | No wallet or signer exists; all authority is simulated | `realFundsMoved: false` | Not implemented; not claimed |

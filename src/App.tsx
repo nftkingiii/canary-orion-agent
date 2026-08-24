@@ -1,14 +1,15 @@
 import { useRef, useState } from 'react'
 import { Activity, ArrowUpRight, Ban, Check, CircleDot, Gauge, LoaderCircle, LockKeyhole, Play, RotateCcw, ShieldCheck } from 'lucide-react'
 import { mandate } from './data'
-import { runCanaryAgent, strategyAgents, validateMandate, type CanaryReport } from './agent-engine'
+import { runCanaryAgent, strategyAgents, validateMandate, type CanaryReport, type StrategyAgent } from './agent-engine'
+import { connectReferenceAgent, type ReferenceAgentManifest } from './remote-agent'
 import type { Mandate } from './domain'
 
-type Phase = 'ready' | 'running' | 'shadowed' | 'promoted' | 'revoked' | 'error'
+type Phase = 'ready' | 'connecting' | 'running' | 'shadowed' | 'promoted' | 'revoked' | 'error'
 type Tab = 'overview' | 'trial' | 'mandate' | 'evidence'
 const formatUsd = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
 const delay = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds))
-const phaseCopy: Record<Phase, string> = { ready: 'Awaiting trial', running: 'Challenging agents', shadowed: 'Candidate selected', promoted: 'Authority live', revoked: 'Threat contained', error: 'Failed closed' }
+const phaseCopy: Record<Phase, string> = { ready: 'Awaiting trial', connecting: 'Verifying agent', running: 'Challenging agents', shadowed: 'Candidate selected', promoted: 'Authority live', revoked: 'Threat contained', error: 'Failed closed' }
 
 function Score({ value }: { value: number }) {
   return <div className="score" aria-label={`Trial score ${value} out of 100`}><strong>{value.toFixed(1)}</strong><span><i style={{ width: `${Math.max(0, value)}%` }} /></span></div>
@@ -23,6 +24,8 @@ function App() {
   const [activeMandate, setActiveMandate] = useState<Mandate>(mandate)
   const [mandateSaved, setMandateSaved] = useState(false)
   const [mandateError, setMandateError] = useState('')
+  const [referenceManifest, setReferenceManifest] = useState<ReferenceAgentManifest | null>(null)
+  const [trialAgents, setTrialAgents] = useState<StrategyAgent[]>(strategyAgents)
   const runSequence = useRef(0)
   const isEvaluated = report !== null && !['ready', 'running', 'error'].includes(phase)
   const selected = report?.candidates.find((candidate) => candidate.id === report.selectedAgentId)
@@ -31,10 +34,14 @@ function App() {
     const sequence = runSequence.current + 1
     runSequence.current = sequence
     if (!mandateSaved) { setActiveTab('mandate'); setMandateError('Save this mandate before starting a probation run.'); return }
-    setActiveTab('trial'); setError(''); setReport(null); setPhase('running')
+    setActiveTab('trial'); setError(''); setReport(null); setPhase('connecting')
     try {
+      const connected = await connectReferenceAgent()
+      if (runSequence.current !== sequence) return
+      const candidates = [connected.agent, ...strategyAgents]
+      setReferenceManifest(connected.manifest); setTrialAgents(candidates); setPhase('running')
       await delay(500)
-      const nextReport = runCanaryAgent(activeMandate)
+      const nextReport = runCanaryAgent(activeMandate, undefined, candidates)
       if (runSequence.current !== sequence) return
       setReport(nextReport); setPhase('shadowed')
       await delay(900)
@@ -85,26 +92,26 @@ function App() {
           <div className="authority-stage" aria-live="polite">
             <div className="stage-meta"><span>AUTHORITY CORE</span><span>STATE / {phase.toUpperCase()}</span></div>
             <div className="core-wrap"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="core-grid" /><div className="core"><span className="core-value">{phase === 'promoted' ? '$1K' : phase === 'revoked' ? 'OFF' : '00'}</span><small>{phase === 'revoked' ? 'revoked' : phase === 'promoted' ? 'live cap' : phase === 'running' ? 'scanning' : 'authority'}</small></div><span className="coordinate c-one">CAP / 1,000</span><span className="coordinate c-two">SLIP / 40 BPS</span><span className="coordinate c-three">MODE / SIM</span></div>
-            <div className="stage-bottom"><div><strong>{formatUsd(activeMandate.capitalUsd)}</strong><span>capital protected</span></div><div><strong>{strategyAgents.length}</strong><span>simulation adapters</span></div><div><strong>{report?.safety.unsafeExecuted ?? 0}</strong><span>unsafe executions</span></div></div>
+            <div className="stage-bottom"><div><strong>{formatUsd(activeMandate.capitalUsd)}</strong><span>capital protected</span></div><div><strong>{trialAgents.length}</strong><span>{referenceManifest ? 'candidates checked' : 'local fixtures'}</span></div><div><strong>{report?.safety.unsafeExecuted ?? 0}</strong><span>unsafe executions</span></div></div>
           </div>
           <div className="principle-strip"><span>01 / CHALLENGE</span><i /><span>02 / PROMOTE</span><i /><span>03 / MONITOR</span><i /><span>04 / REVOKE</span></div>
         </section>}
 
         {activeTab === 'trial' && <section className="trial-screen" role="tabpanel">
-          <div className="screen-heading"><div><span className="kicker">02 / PROBATION</span><h2>Three adapters enter.<br /><em>One earns authority.</em></h2></div><button className="reset-button" onClick={reset} disabled={phase === 'ready'}><RotateCcw size={15} /> Reset</button></div>
+          <div className="screen-heading"><div><span className="kicker">02 / PROBATION</span><h2>One endpoint. Three fixtures.<br /><em>One earns authority.</em></h2></div><button className="reset-button" onClick={reset} disabled={phase === 'ready'}><RotateCcw size={15} /> Reset</button></div>
           <div className="trial-layout">
-            <div className="candidate-stack"><div className="source-banner"><span>BUILT-IN SIMULATION ADAPTERS</span><small>These deterministic fixtures are not fetched from Orion or an external agent store.</small></div>{strategyAgents.map((agent, index) => {
+            <div className="candidate-stack"><div className="source-banner"><span>{referenceManifest ? 'REFERENCE API HANDSHAKE VERIFIED' : 'REFERENCE API REQUIRED FOR PROBATION'}</span><small>{referenceManifest ? `${referenceManifest.name} answered six bounded same-origin HTTP requests. The remaining three candidates are local deterministic fixtures.` : 'Starting probation first verifies Canary’s same-deployment reference-agent contract; no Orion or Agent Store API is claimed.'}</small></div>{trialAgents.map((agent, index) => {
               const result = report?.candidates.find((candidate) => candidate.id === agent.id); const isSelected = result?.id === report?.selectedAgentId
               return <article className={`candidate ${result && !result.eligible ? 'failed' : ''} ${isSelected && isEvaluated ? 'selected' : ''}`} key={agent.id}>
-                <div className="candidate-index">0{index + 1}</div><div className="candidate-name"><h3>{agent.name}</h3><span>{agent.strategy} · local adapter</span></div>
+                <div className="candidate-index">{String(index + 1).padStart(2, '0')}</div><div className="candidate-name"><h3>{agent.name}</h3><span>{agent.strategy} · {agent.id === 'harbor-reference' ? 'network reference API' : 'local fixture'}</span></div>
                 <div className="candidate-measure"><small>Policy pass</small><strong>{result ? `${Math.round(result.passRate * 100)}%` : '—'}</strong></div><div className="candidate-measure"><small>Drawdown</small><strong>{result ? `${result.maxDrawdownPct}%` : '—'}</strong></div>
                 <div>{result && isEvaluated ? <Score value={result.trialScore} /> : <span className="pending">{phase === 'running' ? <><LoaderCircle className="spin" size={14} /> RUNNING</> : 'QUEUED'}</span>}</div>
                 <div className="candidate-state">{!isEvaluated && <span>{phase === 'running' ? 'TESTING' : 'WAITING'}</span>}{isEvaluated && result && !result.eligible && <span className="danger-text">BLOCKED</span>}{isEvaluated && result?.eligible && !isSelected && <span>PASSED</span>}{isSelected && phase === 'shadowed' && <span>SELECTED</span>}{isSelected && phase === 'promoted' && <span>AUTHORIZED</span>}{isSelected && phase === 'revoked' && <span className="danger-text">REVOKED</span>}</div>
               </article>
-            })}<div className="intake-note"><span>LIVE CANDIDATE INTAKE</span><p>Connect a registered agent endpoint here once the adapter contract is verified. No external calls are made in this build.</p><button onClick={() => setActiveTab('evidence')}>View current evidence <ArrowUpRight size={14} /></button></div></div>
-            <aside className="run-console"><div className="console-top"><span>CANARY / SIMULATION ADAPTERS</span><CircleDot size={15} /></div><div className={`mini-core state-${phase}`}><span>{phase === 'revoked' ? <Ban size={30} /> : phase === 'promoted' ? <ShieldCheck size={30} /> : phase === 'running' ? <LoaderCircle className="spin" size={30} /> : <LockKeyhole size={30} />}</span></div>
-              <div className="console-message" role="status">{phase === 'ready' && <><span>{mandateSaved ? 'READY' : 'SETUP REQUIRED'}</span><h3>{mandateSaved ? 'Challenge every candidate.' : 'Define the mandate first.'}</h3><p>{mandateSaved ? 'Six common market conditions. Five hard limits. No manual intervention after launch.' : 'Your capital boundary is not active until you review and save it.'}</p></>}{phase === 'running' && <><span>RUNNING / 06 SCENARIOS</span><h3>Generating and checking decisions.</h3><p>Every proposal is intercepted before it can count as safe.</p></>}{phase === 'shadowed' && selected && <><span>TRIAL COMPLETE</span><h3>{selected.name} ranks first.</h3><p>{selected.trialScore.toFixed(1)} score with a {Math.round(selected.passRate * 100)}% policy pass rate.</p></>}{phase === 'promoted' && <><span>AUTHORITY GRANTED</span><h3>{formatUsd(activeMandate.liveCapUsd)} simulated cap is live.</h3><p>Continuous policy monitoring has started.</p></>}{phase === 'revoked' && <><span>THREAT CONTAINED</span><h3>Authority revoked before execution.</h3><p>{report?.drift.proposal.maxSlippageBps} bps breached the {activeMandate.maxSlippageBps} bps limit. No funds moved.</p></>}{phase === 'error' && <><span>FAILED CLOSED</span><h3>The trial stopped safely.</h3><p>{error}</p></>}</div>
-              <button className="console-action" onClick={start} disabled={phase === 'running'}><span>{phase === 'running' ? 'Trial in progress' : phase === 'ready' && !mandateSaved ? 'Configure mandate' : phase === 'ready' ? 'Begin autonomous run' : 'Run again'}</span>{phase === 'running' ? <LoaderCircle className="spin" size={17} /> : <Play size={17} />}</button>
+            })}<div className="intake-note"><span>EXTERNAL AGENT INTAKE</span><p>The tested adapter is a same-deployment reference endpoint. A third-party or Orion endpoint is not connected in this build.</p><button onClick={() => setActiveTab('evidence')}>View current evidence <ArrowUpRight size={14} /></button></div></div>
+            <aside className="run-console"><div className="console-top"><span>CANARY / BOUNDED ADAPTER</span><CircleDot size={15} /></div><div className={`mini-core state-${phase}`}><span>{phase === 'revoked' ? <Ban size={30} /> : phase === 'promoted' ? <ShieldCheck size={30} /> : ['running', 'connecting'].includes(phase) ? <LoaderCircle className="spin" size={30} /> : <LockKeyhole size={30} />}</span></div>
+              <div className="console-message" role="status">{phase === 'ready' && <><span>{mandateSaved ? 'READY' : 'SETUP REQUIRED'}</span><h3>{mandateSaved ? 'Verify the reference agent.' : 'Define the mandate first.'}</h3><p>{mandateSaved ? 'Canary verifies a manifest, requests six decisions, then checks every proposal against your mandate.' : 'Your capital boundary is not active until you review and save it.'}</p></>}{phase === 'connecting' && <><span>HANDSHAKE / SAME ORIGIN</span><h3>Verifying manifest and contract.</h3><p>No probation begins unless every bounded response validates.</p></>}{phase === 'running' && <><span>RUNNING / 06 SCENARIOS</span><h3>Generating and checking decisions.</h3><p>Every proposal is intercepted before it can count as safe.</p></>}{phase === 'shadowed' && selected && <><span>TRIAL COMPLETE</span><h3>{selected.name} ranks first.</h3><p>{selected.trialScore.toFixed(1)} score with a {Math.round(selected.passRate * 100)}% policy pass rate.</p></>}{phase === 'promoted' && <><span>AUTHORITY GRANTED</span><h3>{formatUsd(activeMandate.liveCapUsd)} simulated cap is live.</h3><p>Continuous policy monitoring has started.</p></>}{phase === 'revoked' && <><span>THREAT CONTAINED</span><h3>Authority revoked before execution.</h3><p>{report?.drift.proposal.maxSlippageBps} bps breached the {activeMandate.maxSlippageBps} bps limit. No funds moved.</p></>}{phase === 'error' && <><span>FAILED CLOSED</span><h3>The trial stopped safely.</h3><p>{error}</p></>}</div>
+              <button className="console-action" onClick={start} disabled={['running', 'connecting'].includes(phase)}><span>{['running', 'connecting'].includes(phase) ? 'Trial in progress' : phase === 'ready' && !mandateSaved ? 'Configure mandate' : phase === 'ready' ? 'Begin autonomous run' : 'Run again'}</span>{['running', 'connecting'].includes(phase) ? <LoaderCircle className="spin" size={17} /> : <Play size={17} />}</button>
             </aside>
           </div>
         </section>}

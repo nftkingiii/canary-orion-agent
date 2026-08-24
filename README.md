@@ -14,7 +14,7 @@ Canary is an autonomous risk-governance agent. It makes financial agents earn bo
 ## What runs
 
 1. Validate a treasury mandate against five hard limits.
-2. Execute three independent strategy adapters across six common market scenarios.
+2. Verify a bounded HTTP manifest and decision contract with one same-deployment reference agent, then execute it alongside three local fixtures across six common market scenarios.
 3. Measure policy pass rate, simulated return, drawdown and decision latency.
 4. Select the highest-scoring candidate that clears the 80% eligibility threshold.
 5. Grant a simulated $1,000 authority cap.
@@ -23,7 +23,7 @@ Canary is an autonomous risk-governance agent. It makes financial agents earn bo
 
 The current build is a deterministic simulation. It does not connect a wallet, sign transactions, use real market observations, or move funds. Those limits are shown in the UI and machine-readable report.
 
-The three visible candidates are built-in simulation adapters defined in `src/agent-engine.ts`; they are not fetched from Orion or an external Agent Store. Live candidate intake is an explicit future integration boundary, not a claim made by this build.
+The **Harbor** candidate is a real, same-origin HTTP reference-agent API served with Canary. Canary fetches its manifest and sends six bounded scenario requests before probation can begin; malformed, unavailable, or mismatched responses fail the run closed. Harbor is part of this deployment, not an independent third-party agent, Orion integration, or Agent Store listing. Northstar, Kestrel, and Aperture remain built-in deterministic fixtures defined in `src/agent-engine.ts`. External candidate intake remains a future integration boundary.
 
 ## Run the product
 
@@ -39,6 +39,7 @@ Open `http://127.0.0.1:4173`, configure and save the mandate, then start probati
 ```powershell
 npm run agent:run
 npm run agent:evaluate
+npm run adapter:smoke
 ```
 
 `agent:run` emits the complete JSON decision report. `agent:evaluate` repeats the run ten times and fails if report identity changes, an unsafe action executes, or enforcement falls below 100%.
@@ -53,7 +54,9 @@ npm audit signatures
 
 ## Architecture
 
-- `src/agent-engine.ts`: strategy adapters, held-out scenarios, mandate validation, scoring, promotion and revocation.
+- `server.mjs` and `reference-agent.mjs`: same-deployment reference-agent manifest/decision API, static production serving, bounded JSON parsing, and response security headers.
+- `src/remote-agent.ts`: browser-side manifest/decision client that validates every remote response before it becomes a candidate adapter.
+- `src/agent-engine.ts`: fixture adapters, held-out scenarios, mandate validation, scoring, promotion and revocation.
 - `src/agent-engine.test.ts`: autonomous-agent behavioral contracts and repeatability tests.
 - `scripts/run-agent.mjs`: standalone CLI and ten-run evaluation entry point.
 - `src/App.tsx`: operator workflow UI using the same engine as the CLI and tests.

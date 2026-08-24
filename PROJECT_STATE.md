@@ -1,6 +1,6 @@
 # Canary project state
 
-Updated: 2026-08-18
+Updated: 2026-08-24
 
 ## Goal
 
@@ -8,7 +8,7 @@ Build a standalone autonomous risk-governance agent for the Orion Agents Builder
 
 ## Current milestone
 
-Operator workflow MVP implemented, redesigned, published, and deployed. Submission preparation remains outstanding.
+Operator workflow and a bounded reference-agent adapter are implemented locally. Production deployment verification and submission preparation remain outstanding.
 
 ## Confirmed
 
@@ -22,6 +22,8 @@ Operator workflow MVP implemented, redesigned, published, and deployed. Submissi
 - Canary deliberately does not move real funds or claim live market data in this milestone.
 - Agent proposals and external data are untrusted; deterministic policy code controls authorization.
 - The three visible candidates (Northstar, Kestrel, Aperture) are local deterministic simulation adapters, not external Orion agents or Agent Store listings.
+- Harbor is a real same-deployment HTTP reference-agent adapter: Canary verifies its manifest, requests six bounded scenario decisions, validates every response, and adds it to the probation suite. It is not an independent third-party agent, Orion API integration, or Agent Store listing.
+- The HTTP adapter accepts only bounded JSON scenarios, rejects malformed or oversized input, rate limits decision calls, emits restrictive response headers, and has a local health/manifest/valid-and-invalid-decision smoke test.
 - Northstar wins the illustrative preservation mandate because lower drawdown and perfect policy compliance outweigh higher-return candidates.
 - `npm run check` passes: lint, nine tests, ten deterministic evaluation runs, TypeScript and production build.
 - Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
@@ -37,12 +39,12 @@ Operator workflow MVP implemented, redesigned, published, and deployed. Submissi
 - X and Discord/Telegram project links are not prepared yet.
 - Wallet registration, ignition fee payment, and final submission require the user's wallet and approval.
 - No live data feed, wallet flow, contract, or transaction exists; these are not claimed and are not shown as requirements in the supplied rules.
-- Live candidate intake remains an unimplemented integration boundary; the UI labels it as such and makes no external endpoint calls.
-- The Content Security Policy is present in the static HTML; production response headers still depend on the eventual host.
+- Third-party candidate intake remains an unimplemented integration boundary; the UI labels it as such. The only networked candidate is Harbor, served by Canary itself.
+- Public deployment has not yet been read back after the custom Node server / reference-adapter change.
 
 ## Next actions
 
-1. Redeploy the redesigned `main` revision and verify the public workflow and assets.
+1. Push the reference-adapter revision, wait for Railway, and verify `/healthz`, manifest, decision rejection, and the public probation workflow against the live revision.
 2. Create the X and Discord/Telegram project presence and prepare submission copy/media.
 3. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
 4. Add live data or a scoped testnet enforcement path only if it improves the demo and can be verified honestly; it is not currently treated as mandatory.

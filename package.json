@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "vite preview --host 0.0.0.0 --port $PORT",
+    "start": "node server.mjs",
     "agent:run": "node --experimental-strip-types scripts/run-agent.mjs",
     "agent:evaluate": "node --experimental-strip-types scripts/run-agent.mjs --runs 10",
+    "adapter:smoke": "node scripts/adapter-smoke.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
-    "check": "npm run lint && npm run test && npm run agent:evaluate && npm run build"
+    "check": "npm run lint && npm run test && npm run agent:evaluate && npm run build && npm run adapter:smoke"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
