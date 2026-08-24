@@ -8,7 +8,7 @@ Build a usable non-custodial financial-agent evaluation product for the Orion Ag
 
 ## Current milestone
 
-External HTTPS agent intake, browser-persisted mandates/run history, and the bounded reference adapter are implemented and verified locally. The new external-intake revision is not yet verified on Railway. Demo and submission preparation remain outstanding.
+External HTTPS agent intake, browser-persisted mandates/run history, and the bounded reference adapter are deployed and publicly verified. Demo and submission preparation remain outstanding.
 
 ## Confirmed
 
@@ -25,6 +25,7 @@ External HTTPS agent intake, browser-persisted mandates/run history, and the bou
 - Harbor is a real same-deployment HTTP reference-agent adapter: Canary verifies its manifest, requests six bounded scenario decisions, validates every response, and adds it to the probation suite. It is not an independent third-party agent, Orion API integration, or Agent Store listing.
 - Operators can now provide a public HTTPS base URL implementing `GET /manifest` and `POST /decide`. Canary's server verifies the destination, fetches six live decisions, validates identity and schemas, and returns them to the policy engine.
 - A local browser run used the public Railway Harbor endpoint as a genuinely remote input, generated report `cnr_38a3f091`, persisted it across reloads, and produced no browser warnings/errors.
+- A clean public browser run on the deployed release submitted the public Harbor base URL through the external intake, completed six remote decisions, generated `cnr_38a3f091`, and retained the report in local run history after reload with no browser warnings/errors.
 - External intake rejects non-HTTPS URLs, embedded credentials, query strings, fragments, custom ports, redirects, private/reserved resolved addresses, oversized responses, incomplete scenario coverage, invalid schemas, and manifest/decision identity mismatches.
 - Mandates, endpoint preference, and up to eight reports persist in browser storage. No credentials, wallet data, or server-side user records are stored.
 - The HTTP adapter accepts only bounded JSON scenarios, rejects malformed or oversized input, rate limits decision calls, emits restrictive response headers, and has a local health/manifest/valid-and-invalid-decision smoke test.
@@ -38,6 +39,7 @@ External HTTPS agent intake, browser-persisted mandates/run history, and the bou
 - Browser QA exercised mandate setup, invalid-input rejection, saved policy, probation, and automatic revocation; the current configuration is session-only and still simulation-backed.
 - Public repository: https://github.com/nftkingiii/canary-orion-agent
 - Railway deployment: https://agent-canary.up.railway.app
+- Deployed external-intake revision: `9c2e1cb035d7fc40cf50c68233334851a3f43ca0`; `/healthz` reports the same revision and `externalAgentIntake: true`; public bundle `index-D4BC59ee.js`.
 - A repository scan found no common secret patterns outside generated dependencies/build output.
 
 ## Current gaps
@@ -46,7 +48,6 @@ External HTTPS agent intake, browser-persisted mandates/run history, and the bou
 - Wallet registration, ignition fee payment, and final submission require the user's wallet and approval.
 - No live data feed, wallet flow, contract, or transaction exists; these are not claimed and are not shown as requirements in the supplied rules.
 - The evaluation scenarios and outcome model remain deterministic; there is no independent live market-performance proof.
-- Railway is still serving the earlier reference-adapter revision until the current work is committed, pushed, deployed, and read back.
 - Public external agents must be unauthenticated because Canary intentionally rejects credentials in URLs and does not yet provide encrypted server-side credential storage.
 - DNS validation precedes `fetch`; the current Node implementation still has a DNS-rebinding time-of-check/time-of-use residual documented in `THREAT_MODEL.md`.
 
@@ -54,5 +55,5 @@ External HTTPS agent intake, browser-persisted mandates/run history, and the bou
 
 1. Create the X and Discord/Telegram project presence and prepare submission copy/media.
 2. Register the submitting wallet, complete the ignition fee, and submit before the deadline.
-3. Commit/push the external-intake release, verify Railway's `/healthz` revision, then exercise the public external-agent workflow from a clean browser.
+3. Recruit one independent agent developer to implement the documented adapter and preserve the first third-party report as product evidence.
 4. Add live data or a scoped testnet enforcement path only if it improves the product and can be verified honestly; it is not currently treated as mandatory.
