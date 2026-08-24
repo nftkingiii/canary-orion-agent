@@ -4,6 +4,15 @@ import { scenarios, type MarketScenario, type StrategyAgent } from './agent-engi
 export type ReferenceAgentManifest = { id: string; name: string; strategy: string; adapter: 'http-reference/v1'; provenance: string; capabilities: string[] }
 const REQUEST_TIMEOUT_MS = 3_000
 
+export const referenceAgentPreview: StrategyAgent = {
+  id: 'harbor-reference',
+  name: 'Harbor',
+  strategy: 'Risk-aware yield routing',
+  decide: () => { throw new Error('Harbor must complete its HTTP handshake before evaluation') },
+}
+
+export const buildCandidateRoster = (manifest: ReferenceAgentManifest | null, connectedAgents: StrategyAgent[], fixtures: StrategyAgent[]) => manifest ? connectedAgents : [referenceAgentPreview, ...fixtures]
+
 const isObject = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 const isNumberInRange = (value: unknown, minimum: number, maximum: number): value is number => typeof value === 'number' && Number.isFinite(value) && value >= minimum && value <= maximum
 

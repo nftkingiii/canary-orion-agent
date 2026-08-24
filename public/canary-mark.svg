@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Canary">
+  <rect width="64" height="64" rx="15" fill="#080808"/>
+  <path fill="#f3f3ee" d="M15 41.5 24.5 17l8.8 9.2L50 22l-8.6 10.2 7.6 4.4-14.2 1.8L27 50l-2.7-11.2L15 41.5Z"/>
+  <circle cx="35.5" cy="30.5" r="3.25" fill="#e95f3f"/>
+  <path d="M19 46h25" stroke="#f3f3ee" stroke-width="2" stroke-linecap="round" opacity=".42"/>
+</svg>

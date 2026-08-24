@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
-import { Activity, ArrowUpRight, Ban, Check, CircleDot, Gauge, LoaderCircle, LockKeyhole, Play, RotateCcw, ShieldCheck } from 'lucide-react'
+import { ArrowUpRight, Ban, Check, CircleDot, Gauge, LoaderCircle, LockKeyhole, Play, RotateCcw, ShieldCheck } from 'lucide-react'
 import { mandate } from './data'
 import { runCanaryAgent, strategyAgents, validateMandate, type CanaryReport, type StrategyAgent } from './agent-engine'
-import { connectReferenceAgent, type ReferenceAgentManifest } from './remote-agent'
+import { buildCandidateRoster, connectReferenceAgent, type ReferenceAgentManifest } from './remote-agent'
 import type { Mandate } from './domain'
 
 type Phase = 'ready' | 'connecting' | 'running' | 'shadowed' | 'promoted' | 'revoked' | 'error'
@@ -29,6 +29,7 @@ function App() {
   const runSequence = useRef(0)
   const isEvaluated = report !== null && !['ready', 'running', 'error'].includes(phase)
   const selected = report?.candidates.find((candidate) => candidate.id === report.selectedAgentId)
+  const displayedAgents = buildCandidateRoster(referenceManifest, trialAgents, strategyAgents)
 
   const start = async () => {
     const sequence = runSequence.current + 1
@@ -74,7 +75,7 @@ function App() {
   return (
     <div className={`app-shell phase-${phase}`}>
       <header className="topbar">
-        <button className="brand" onClick={() => setActiveTab('overview')} aria-label="Canary overview"><span className="brand-signal"><Activity size={19} /></span><strong>CANARY</strong></button>
+        <button className="brand" onClick={() => setActiveTab('overview')} aria-label="Canary overview"><span className="brand-signal"><img src="/canary-mark.svg" alt="" /></span><strong>CANARY</strong></button>
         <div className="top-status"><i /> {phaseCopy[phase]}</div><div className="edition">ORION / 2026</div>
       </header>
       <nav className="tabs" role="tablist" aria-label="Canary workflows">
@@ -92,7 +93,7 @@ function App() {
           <div className="authority-stage" aria-live="polite">
             <div className="stage-meta"><span>AUTHORITY CORE</span><span>STATE / {phase.toUpperCase()}</span></div>
             <div className="core-wrap"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="core-grid" /><div className="core"><span className="core-value">{phase === 'promoted' ? '$1K' : phase === 'revoked' ? 'OFF' : '00'}</span><small>{phase === 'revoked' ? 'revoked' : phase === 'promoted' ? 'live cap' : phase === 'running' ? 'scanning' : 'authority'}</small></div><span className="coordinate c-one">CAP / 1,000</span><span className="coordinate c-two">SLIP / 40 BPS</span><span className="coordinate c-three">MODE / SIM</span></div>
-            <div className="stage-bottom"><div><strong>{formatUsd(activeMandate.capitalUsd)}</strong><span>capital protected</span></div><div><strong>{trialAgents.length}</strong><span>{referenceManifest ? 'candidates checked' : 'local fixtures'}</span></div><div><strong>{report?.safety.unsafeExecuted ?? 0}</strong><span>unsafe executions</span></div></div>
+            <div className="stage-bottom"><div><strong>{formatUsd(activeMandate.capitalUsd)}</strong><span>capital protected</span></div><div><strong>{displayedAgents.length}</strong><span>{referenceManifest ? 'candidates checked' : 'candidate pool'}</span></div><div><strong>{report?.safety.unsafeExecuted ?? 0}</strong><span>unsafe executions</span></div></div>
           </div>
           <div className="principle-strip"><span>01 / CHALLENGE</span><i /><span>02 / PROMOTE</span><i /><span>03 / MONITOR</span><i /><span>04 / REVOKE</span></div>
         </section>}
@@ -100,13 +101,15 @@ function App() {
         {activeTab === 'trial' && <section className="trial-screen" role="tabpanel">
           <div className="screen-heading"><div><span className="kicker">02 / PROBATION</span><h2>One endpoint. Three fixtures.<br /><em>One earns authority.</em></h2></div><button className="reset-button" onClick={reset} disabled={phase === 'ready'}><RotateCcw size={15} /> Reset</button></div>
           <div className="trial-layout">
-            <div className="candidate-stack"><div className="source-banner"><span>{referenceManifest ? 'REFERENCE API HANDSHAKE VERIFIED' : 'REFERENCE API REQUIRED FOR PROBATION'}</span><small>{referenceManifest ? `${referenceManifest.name} answered six bounded same-origin HTTP requests. The remaining three candidates are local deterministic fixtures.` : 'Starting probation first verifies Canary’s same-deployment reference-agent contract; no Orion or Agent Store API is claimed.'}</small></div>{trialAgents.map((agent, index) => {
-              const result = report?.candidates.find((candidate) => candidate.id === agent.id); const isSelected = result?.id === report?.selectedAgentId
-              return <article className={`candidate ${result && !result.eligible ? 'failed' : ''} ${isSelected && isEvaluated ? 'selected' : ''}`} key={agent.id}>
+            <div className="candidate-stack"><div className="source-banner"><span>{referenceManifest ? 'REFERENCE API HANDSHAKE VERIFIED' : 'REFERENCE AGENT READY TO VERIFY'}</span><small>{referenceManifest ? `${referenceManifest.name} answered six bounded same-origin HTTP requests. The remaining three candidates are local deterministic fixtures.` : 'Harbor is visible before probation, but remains unverified until Canary completes its manifest and decision handshake.'}</small></div>{displayedAgents.map((agent, index) => {
+              const result = report?.candidates.find((candidate) => candidate.id === agent.id); const isSelected = result?.id === report?.selectedAgentId; const isReference = agent.id === 'harbor-reference'
+              const pendingLabel = phase === 'connecting' && isReference ? 'VERIFYING' : phase === 'running' ? 'RUNNING' : 'QUEUED'
+              const stateLabel = phase === 'connecting' && isReference ? 'HANDSHAKE' : phase === 'running' ? 'TESTING' : isReference && !referenceManifest ? 'UNVERIFIED' : 'WAITING'
+              return <article className={`candidate ${isReference ? 'reference' : ''} ${result && !result.eligible ? 'failed' : ''} ${isSelected && isEvaluated ? 'selected' : ''}`} key={agent.id}>
                 <div className="candidate-index">{String(index + 1).padStart(2, '0')}</div><div className="candidate-name"><h3>{agent.name}</h3><span>{agent.strategy} · {agent.id === 'harbor-reference' ? 'network reference API' : 'local fixture'}</span></div>
                 <div className="candidate-measure"><small>Policy pass</small><strong>{result ? `${Math.round(result.passRate * 100)}%` : '—'}</strong></div><div className="candidate-measure"><small>Drawdown</small><strong>{result ? `${result.maxDrawdownPct}%` : '—'}</strong></div>
-                <div>{result && isEvaluated ? <Score value={result.trialScore} /> : <span className="pending">{phase === 'running' ? <><LoaderCircle className="spin" size={14} /> RUNNING</> : 'QUEUED'}</span>}</div>
-                <div className="candidate-state">{!isEvaluated && <span>{phase === 'running' ? 'TESTING' : 'WAITING'}</span>}{isEvaluated && result && !result.eligible && <span className="danger-text">BLOCKED</span>}{isEvaluated && result?.eligible && !isSelected && <span>PASSED</span>}{isSelected && phase === 'shadowed' && <span>SELECTED</span>}{isSelected && phase === 'promoted' && <span>AUTHORIZED</span>}{isSelected && phase === 'revoked' && <span className="danger-text">REVOKED</span>}</div>
+                <div>{result && isEvaluated ? <Score value={result.trialScore} /> : <span className="pending">{['connecting', 'running'].includes(phase) && <LoaderCircle className="spin" size={14} />}{pendingLabel}</span>}</div>
+                <div className="candidate-state">{!isEvaluated && <span>{stateLabel}</span>}{isEvaluated && result && !result.eligible && <span className="danger-text">BLOCKED</span>}{isEvaluated && result?.eligible && !isSelected && <span>PASSED</span>}{isSelected && phase === 'shadowed' && <span>SELECTED</span>}{isSelected && phase === 'promoted' && <span>AUTHORIZED</span>}{isSelected && phase === 'revoked' && <span className="danger-text">REVOKED</span>}</div>
               </article>
             })}<div className="intake-note"><span>EXTERNAL AGENT INTAKE</span><p>The tested adapter is a same-deployment reference endpoint. A third-party or Orion endpoint is not connected in this build.</p><button onClick={() => setActiveTab('evidence')}>View current evidence <ArrowUpRight size={14} /></button></div></div>
             <aside className="run-console"><div className="console-top"><span>CANARY / BOUNDED ADAPTER</span><CircleDot size={15} /></div><div className={`mini-core state-${phase}`}><span>{phase === 'revoked' ? <Ban size={30} /> : phase === 'promoted' ? <ShieldCheck size={30} /> : ['running', 'connecting'].includes(phase) ? <LoaderCircle className="spin" size={30} /> : <LockKeyhole size={30} />}</span></div>

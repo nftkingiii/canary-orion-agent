@@ -10,6 +10,7 @@
 | Candidate provenance | Built-in strategy adapters are labeled as local simulation fixtures | `src/agent-engine.ts`, UI source banner, README limitation | Verified locally, 2026-08-18 |
 | Reference-agent adapter | Same-deployment HTTP manifest and six schema-validated decision requests; unavailable/malformed responses stop probation | Live `/healthz`, manifest, valid decision, 400 rejection, browser Harbor probation/revocation, `npm run adapter:smoke` | Verified publicly, 2026-08-24 |
 | Product UI | Configure mandate, save policy, run probation, inspect evidence, and observe revocation | Browser reproduction: mandate save, invalid-input rejection, autonomous run, report, no console errors | Verified locally, 2026-08-18 |
+| Candidate discovery | Harbor is visible before probation with an explicit unverified state; the run verifies it before evaluation | Candidate-roster regression test and clean-browser Live trial inspection | Verified locally, 2026-08-24; public deployment pending |
 | Orion SDK/API | Not stated in supplied submission requirements | `site info.pdf` captured 2026-08-17 | Not applicable unless later rules require it |
 | Real financial action | No wallet or signer exists; all authority is simulated | `realFundsMoved: false` | Not implemented; not claimed |
 | Deployment | Public UI plus reference-agent API | `https://agent-canary.up.railway.app`, bundle `index-DCCkUIlU.js`, live API read-back | Verified publicly, 2026-08-24 |
