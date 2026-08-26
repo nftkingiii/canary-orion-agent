@@ -8,7 +8,7 @@ Build a usable non-custodial financial-agent evaluation product for the Orion Ag
 
 ## Current milestone
 
-External HTTPS intake and browser-persisted policies/reports are deployed in the previous release. A product-only website revision removing all public demo mechanics is implemented locally and awaiting release verification.
+External HTTPS intake, browser-persisted policies/reports, and the product-only website are deployed and publicly verified.
 
 ## Confirmed
 
@@ -30,6 +30,7 @@ External HTTPS intake and browser-persisted policies/reports are deployed in the
 - Mandates, endpoint preference, and up to eight reports persist in browser storage. No credentials, wallet data, or server-side user records are stored.
 - The new website requires a user-supplied endpoint and evaluates only that agent. It removes Harbor fallback, local fixture comparison, winner selection, simulated authority, staged drift, and forced revocation from the product workflow.
 - The resulting report contains six live agent decisions, per-decision policy outcomes, aggregate pass/blocked counts, response latency, and explicitly labelled scenario-modelled drawdown.
+- Clean production browser verification on revision `97003b37c2bad948190e7f242381658f3188e4f1` completed the required endpoint → policy → six decisions → report flow, generated `cnr_5ab58552`, retained it after reload, found no demo language, and found no browser warnings/errors.
 - The HTTP adapter accepts only bounded JSON scenarios, rejects malformed or oversized input, rate limits decision calls, emits restrictive response headers, and has a local health/manifest/valid-and-invalid-decision smoke test.
 - Northstar wins the fixture-only CLI evaluation. In the live four-candidate workflow, Harbor narrowly wins after its HTTP handshake and six validated decisions.
 - Public clean-browser verification shows Harbor in Live trial before probation as an `UNVERIFIED` reference agent, then transitioning through handshake, testing, evaluation, and revocation states.
@@ -41,7 +42,7 @@ External HTTPS intake and browser-persisted policies/reports are deployed in the
 - Browser QA exercised mandate setup, invalid-input rejection, saved policy, probation, and automatic revocation; the current configuration is session-only and still simulation-backed.
 - Public repository: https://github.com/nftkingiii/canary-orion-agent
 - Railway deployment: https://agent-canary.up.railway.app
-- Deployed external-intake revision: `9c2e1cb035d7fc40cf50c68233334851a3f43ca0`; `/healthz` reports the same revision and `externalAgentIntake: true`; public bundle `index-D4BC59ee.js`.
+- Deployed product-only revision: `97003b37c2bad948190e7f242381658f3188e4f1`; `/healthz` reports the same revision and `externalAgentIntake: true`.
 - A repository scan found no common secret patterns outside generated dependencies/build output.
 
 ## Current gaps
