@@ -8,7 +8,7 @@ Build a usable non-custodial financial-agent evaluation product for the Orion Ag
 
 ## Current milestone
 
-External HTTPS agent intake, browser-persisted mandates/run history, and the bounded reference adapter are deployed and publicly verified. Demo and submission preparation remain outstanding.
+External HTTPS intake and browser-persisted policies/reports are deployed in the previous release. A product-only website revision removing all public demo mechanics is implemented locally and awaiting release verification.
 
 ## Confirmed
 
@@ -28,11 +28,13 @@ External HTTPS agent intake, browser-persisted mandates/run history, and the bou
 - A clean public browser run on the deployed release submitted the public Harbor base URL through the external intake, completed six remote decisions, generated `cnr_38a3f091`, and retained the report in local run history after reload with no browser warnings/errors.
 - External intake rejects non-HTTPS URLs, embedded credentials, query strings, fragments, custom ports, redirects, private/reserved resolved addresses, oversized responses, incomplete scenario coverage, invalid schemas, and manifest/decision identity mismatches.
 - Mandates, endpoint preference, and up to eight reports persist in browser storage. No credentials, wallet data, or server-side user records are stored.
+- The new website requires a user-supplied endpoint and evaluates only that agent. It removes Harbor fallback, local fixture comparison, winner selection, simulated authority, staged drift, and forced revocation from the product workflow.
+- The resulting report contains six live agent decisions, per-decision policy outcomes, aggregate pass/blocked counts, response latency, and explicitly labelled scenario-modelled drawdown.
 - The HTTP adapter accepts only bounded JSON scenarios, rejects malformed or oversized input, rate limits decision calls, emits restrictive response headers, and has a local health/manifest/valid-and-invalid-decision smoke test.
 - Northstar wins the fixture-only CLI evaluation. In the live four-candidate workflow, Harbor narrowly wins after its HTTP handshake and six validated decisions.
 - Public clean-browser verification shows Harbor in Live trial before probation as an `UNVERIFIED` reference agent, then transitioning through handshake, testing, evaluation, and revocation states.
 - A high-contrast Canary bird/signal SVG is publicly served as both the favicon and the in-product brand mark; the verified release bundle is `index-BW5uIfNs.js`.
-- Unit suite passes with 18 tests, including endpoint and adapter abuse cases; TypeScript/Vite build and lint pass. A complete fresh `npm run check` remains required immediately before release.
+- Unit suite passes with 19 tests, including a regression proving the website report model has no authority or drift fields. TypeScript/Vite build and lint pass; a complete fresh `npm run check` remains required immediately before release.
 - Ten evaluation runs produce the same report identity and selected strategy, with a 100% enforcement pass rate and zero unsafe executions.
 - `npm audit` reports zero known vulnerabilities; all 227 installed packages have verified registry signatures and 90 have verified attestations.
 - Browser QA exercised the redesigned tabbed interface and autonomous run through revocation, confirmed report `cnr_749197ea`, found no console warnings/errors, and confirmed no page-level overflow at 390 x 844.

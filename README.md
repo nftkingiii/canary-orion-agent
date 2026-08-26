@@ -4,27 +4,23 @@ Canary is a non-custodial evaluation product for financial agents. An operator c
 
 ## How an operator uses Canary
 
-1. Open the product and review the default treasury policy.
-2. Configure capital, authority cap, allocation, drawdown, slippage, and allowed venues in the **Mandate** tab.
-3. Save the mandate. Invalid or unsafe limits are rejected before a run starts.
-4. In **Live trial**, enter an agent base URL or leave it empty to use Harbor, the bundled reference agent.
-5. Start probation. Canary requests `<base>/manifest` and `<base>/decide` through its protected server-side adapter.
-6. Review the candidate comparison, policy pass rates, score, drawdown, and authority state.
-7. Open **Evidence** to inspect the report and browser-persisted run history.
+1. Open **Policy**, configure the portfolio reference, per-action value, allocation, drawdown, slippage, and allowed protocols, then save it.
+2. Open **Evaluate** and enter the public HTTPS base URL for your agent.
+3. Run the evaluation. Canary requests `<base>/manifest` and six live `<base>/decide` responses through its protected server-side adapter.
+4. Inspect each returned decision, its policy result, and the aggregate compliance summary.
+5. Open **Reports** to revisit evaluations stored in this browser.
 
 ## What runs
 
-1. Validate a treasury mandate against five hard limits.
-2. Verify a bounded HTTP manifest and decision contract with an operator-supplied external agent or the same-deployment Harbor reference, then execute it alongside three local baseline fixtures across six common market scenarios.
-3. Measure policy pass rate, simulated return, drawdown and decision latency.
-4. Select the highest-scoring candidate that clears the 80% eligibility threshold.
-5. Grant a simulated $1,000 authority cap.
-6. Monitor a held-out 57 bps drift proposal.
-7. Revoke authority before execution when it breaches the 40 bps limit.
+1. Validate the operator's policy against five hard limits.
+2. Verify the supplied agent's manifest and identity.
+3. Request six live decisions from that agent across a controlled scenario suite.
+4. Check each proposal's allocation, protocol, slippage, and scenario-modelled drawdown against the policy.
+5. Produce a compliant or review-required report with all decisions visible.
 
-Agent requests are live when an external endpoint is supplied. The evaluation environment remains deterministic: Canary does not connect a wallet, sign transactions, use live market observations, or move funds. Those limits are shown in the UI and machine-readable report.
+Agent requests are live. Scenario outcomes remain modelled rather than live market performance. Canary does not connect a wallet, sign transactions, or move funds; it is an evaluation product, not an execution layer.
 
-External intake is implemented. Canary accepts an HTTPS base URL, resolves and rejects private/reserved destinations, forbids credentials, query strings, custom ports and redirects, caps response size, applies timeouts and rate limits, validates manifest/decision schemas, and fails closed before evaluation. The remote agent must expose `GET <base>/manifest` and `POST <base>/decide`; see the contract below. Harbor remains a same-deployment reference implementation. Northstar, Kestrel, and Aperture are clearly labeled deterministic baselines.
+External intake is implemented. Canary requires an HTTPS base URL, resolves and rejects private/reserved destinations, forbids credentials, query strings, custom ports and redirects, caps response size, applies timeouts and rate limits, validates manifest/decision schemas, and fails closed before evaluation. The remote agent must expose `GET <base>/manifest` and `POST <base>/decide`; see the contract below. There is no fallback agent, fixture comparison, simulated promotion, or staged revocation in the website.
 
 ## Agent adapter contract
 
@@ -49,7 +45,7 @@ npm install --ignore-scripts
 npm run dev
 ```
 
-Open `http://127.0.0.1:4173`, configure and save the mandate, then start probation. The trial, promotion, monitoring challenge and revocation continue automatically after launch.
+Open `http://127.0.0.1:4173`, save a policy, connect a compatible public agent endpoint, and run an evaluation.
 
 ## Run the agent directly
 
@@ -72,11 +68,11 @@ npm audit signatures
 ## Architecture
 
 - `server.mjs`, `external-agent.mjs`, and `reference-agent.mjs`: protected external intake, same-deployment reference API, static production serving, rate limits, bounded JSON parsing, SSRF controls, and response security headers.
-- `src/remote-agent.ts`: browser client that requests server-side evaluation and validates every result again before it becomes a candidate adapter.
-- `src/agent-engine.ts`: fixture adapters, held-out scenarios, mandate validation, scoring, promotion and revocation.
+- `src/remote-agent.ts`: browser client that requests server-side evaluation and validates every response again before policy evaluation.
+- `src/agent-engine.ts`: controlled scenarios, mandate validation, proposal checks, modelled outcome calculations, and single-agent report generation. Historical multi-agent functions remain for CLI regression evidence and are not used by the website.
 - `src/agent-engine.test.ts`: autonomous-agent behavioral contracts and repeatability tests.
 - `scripts/run-agent.mjs`: standalone CLI and ten-run evaluation entry point.
-- `src/App.tsx`: operator workflow UI using the same engine as the CLI and tests.
+- `src/App.tsx`: endpoint → policy → evaluation → report product workflow.
 - `src/domain.ts`: lower-level policy primitives retained as regression coverage.
 
 ## Orion submission position

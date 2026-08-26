@@ -77,6 +77,25 @@ export type CanaryReport = {
   events: CanaryEvent[]
 }
 
+export type AgentEvaluationReport = {
+  reportId: string
+  mandateId: string
+  mode: 'external-agent-evaluation'
+  agent: { id: string; name: string; strategy: string }
+  scenarioCount: number
+  status: 'compliant' | 'review-required'
+  summary: {
+    decisions: number
+    allowed: number
+    blocked: number
+    passRate: number
+    averageModelledReturnPct: number
+    maxModelledDrawdownPct: number
+    p95LatencyMs: number
+  }
+  results: ScenarioResult[]
+}
+
 export const scenarios: MarketScenario[] = [
   { id: 'calm', label: 'Calm market', aaveYieldPct: 5.8, morphoYieldPct: 6.3, volatilityPct: 0.7, baseSlippageBps: 8 },
   { id: 'rotation', label: 'Yield rotation', aaveYieldPct: 5.1, morphoYieldPct: 8.2, volatilityPct: 1.4, baseSlippageBps: 13 },
@@ -203,6 +222,33 @@ function runCandidate(agent: StrategyAgent, mandate: Mandate, suite: MarketScena
     trialScore,
     eligible: passRate >= 0.8,
     results,
+  }
+}
+
+export function runAgentEvaluation(mandate: Mandate, agent: StrategyAgent, suite = scenarios): AgentEvaluationReport {
+  const mandateErrors = validateMandate(mandate)
+  if (mandateErrors.length) throw new Error(mandateErrors.join('; '))
+  if (suite.length < 3 || suite.length > 100) throw new Error('Scenario suite must contain between 3 and 100 cases')
+  const candidate = runCandidate(agent, mandate, suite)
+  const mandateId = `mnd_${stableHash(JSON.stringify(mandate))}`
+  const reportId = `cnr_${stableHash(`${mandateId}:${agent.id}:${candidate.results.map((result) => `${result.scenarioId}:${result.allowed}:${result.proposal.protocol}:${result.proposal.allocationPct}:${result.proposal.maxSlippageBps}`).join('|')}`)}`
+  return {
+    reportId,
+    mandateId,
+    mode: 'external-agent-evaluation',
+    agent: { id: agent.id, name: agent.name, strategy: agent.strategy },
+    scenarioCount: suite.length,
+    status: candidate.passRate === 1 ? 'compliant' : 'review-required',
+    summary: {
+      decisions: candidate.scenarioCount,
+      allowed: candidate.passCount,
+      blocked: candidate.scenarioCount - candidate.passCount,
+      passRate: candidate.passRate,
+      averageModelledReturnPct: candidate.averageReturnPct,
+      maxModelledDrawdownPct: candidate.maxDrawdownPct,
+      p95LatencyMs: candidate.p95LatencyMs,
+    },
+    results: candidate.results,
   }
 }
 
